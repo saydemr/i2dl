@@ -104,8 +104,21 @@ class Solver(object):
         #   the gradient!                                                      #
         ########################################################################
 
+        # Forward pass
+        model_forward = model.forward(X_train)
 
-        pass
+        # Compute loss
+        loss, dloss_dhaty = loss_func(model_forward, y_train)
+
+        # Backward pass
+        dhaty_dW = model.backward(dloss_dhaty)
+
+        # Compute gradient
+        dloss_dW = dhaty_dW / X_train.shape[0]
+
+        # Update weights
+        opt.step(dloss_dW)
+
 
         ########################################################################
         #                           END OF YOUR CODE                           #

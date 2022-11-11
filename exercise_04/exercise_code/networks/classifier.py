@@ -92,8 +92,8 @@ class Classifier(Network):
 
         # backward pass
         X, y = self.cache
-        dW = np.dot(X.T, (y - dout) * y * (1 - y))
-        
+
+        dW = np.dot(X.T, y * (1 - y) * dout)
 
         ########################################################################
         #                           END OF YOUR CODE                           #
