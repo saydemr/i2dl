@@ -102,8 +102,7 @@ class BCE(Loss):
         # TODO:                                                                #
         # Implement the forward pass and return the output of the BCE loss.    #
         ########################################################################
-
-        result = - 1 * y_truth * np.log(y_out) + (1 - y_truth * np.log(1 - y_out))
+        result = - 1 * y_truth * np.log(y_out) - ((1 - y_truth) * np.log(1 - y_out))
         ########################################################################
         #                           END OF YOUR CODE                           #
         ########################################################################
@@ -126,10 +125,7 @@ class BCE(Loss):
         # Implement the backward pass. Return the gradient w.r.t to the input  #
         # to the loss function, y_out.                                         #
         ########################################################################
-
-
         gradient = (-1*y_truth / y_out) + (1 - y_truth) / (1 -  y_out) 
-
         ########################################################################
         #                           END OF YOUR CODE                           #
         ########################################################################

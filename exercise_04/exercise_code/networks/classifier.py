@@ -53,13 +53,8 @@ class Classifier(Network):
         # Also, save in self.cache an array of all the relevant variables that #
         # you will need to use in the backward() function. E.g.: (X, ...)      #
         ########################################################################
-
-        # forward pass
         y = self.sigmoid(np.dot(X, self.W))
-
         self.cache = (X, y)
-        
-
         ########################################################################
         #                           END OF YOUR CODE                           #
         ########################################################################
@@ -89,12 +84,8 @@ class Classifier(Network):
         # x, and could be calculated with the result, calculated earlier at    #
         # the forward() function.                                              #
         ########################################################################
-
-        # backward pass
         X, y = self.cache
-
         dW = np.dot(X.T, y * (1 - y) * dout)
-
         ########################################################################
         #                           END OF YOUR CODE                           #
         ########################################################################
@@ -114,9 +105,7 @@ class Classifier(Network):
         # Implement the sigmoid function over the input x.                     #
         # Return out.                                                          #
         ########################################################################
-
         out = 1 / (1 + np.exp(-x))
-
         ########################################################################
         #                           END OF YOUR CODE                           #
         ########################################################################

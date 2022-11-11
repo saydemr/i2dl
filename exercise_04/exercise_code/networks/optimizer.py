@@ -22,10 +22,7 @@ class Optimizer(object):
         # Implement the gradient descent step over the weight, using the       #
         # learning rate.                                                       #
         ########################################################################
-
-
         weight = weight - self.lr * dw
-
         ########################################################################
         #                           END OF YOUR CODE                           #
         ########################################################################
