@@ -124,7 +124,10 @@ class SGDMomentum(object):
         # velocity v.                                                          #
         ########################################################################
 
-        pass
+        # Calculate the weight update
+        v = config['momentum'] * v - lr * dw
+        next_w = w + v
+
 
         ########################################################################
         #                           END OF YOUR CODE                           #
