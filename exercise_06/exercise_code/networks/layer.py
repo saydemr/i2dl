@@ -122,7 +122,8 @@ class LeakyRelu:
         # Implement the forward pass of LeakyRelu activation function          #
         ########################################################################
 
-        pass
+        outputs = np.maximum(self.slope * x, x)
+        cache = outputs
 
         ########################################################################
         #                           END OF YOUR CODE                           #
@@ -139,7 +140,10 @@ class LeakyRelu:
         # Implement the backward pass of LeakyRelu activation function         #
         ########################################################################
 
-        pass
+        out = cache
+        dx = np.ones_like(out)
+        dx[out < 0] = self.slope
+        dx = dx * dout
 
         ########################################################################
         #                           END OF YOUR CODE                           #
@@ -165,7 +169,10 @@ class Tanh:
         # Implement the forward pass of Tanh activation function               #
         ########################################################################
 
-        pass
+        a = np.exp(x)
+        b = np.exp(-x)
+        outputs = (a - b) / (a + b)
+        cache = outputs
 
         ########################################################################
         #                           END OF YOUR CODE                           #
@@ -182,7 +189,9 @@ class Tanh:
         # Implement the backward pass of Tanh activation function              #
         ########################################################################
 
-        pass
+        out = cache
+        dx =  1 - np.power(out, 2)
+        dx = dx * dout
 
         ########################################################################
         #                           END OF YOUR CODE                           #
