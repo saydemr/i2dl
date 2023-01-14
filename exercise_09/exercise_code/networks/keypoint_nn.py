@@ -37,13 +37,69 @@ class KeypointModel(nn.Module):
         # You're going probably try different architecutres, and that will     #
         # allow you to be quick and flexible.                                  #
         ########################################################################
-        
+    
+        # input layer
+        self.layer1 = nn.Sequential(
+            # add one same layer with padding (output size = input size)
+            nn.Conv2d(1, hparams["cv1"], 4, stride=1, padding=1),
+            nn.ReLU(),
+            nn.Conv2d(hparams["cv1"], hparams["cv1"], 4, stride=1, padding=0),
+            nn.ReLU(),
+            nn.MaxPool2d(2, stride=2),
+            nn.Dropout(0.1)
+        )
 
-        pass
+        # outdim = (in_dim - kernel_size + 2*padding)/stride + 1
+        # outdim = (96 - 4 + 0)/1 + 1 = 93
+        # after maxpooling: 93/2 = 46
 
-        ########################################################################
-        #                           END OF YOUR CODE                           #
-        ########################################################################
+        self.layer2 = nn.Sequential(
+            nn.Conv2d(hparams["cv1"], hparams["cv2"], 3, stride=1, padding=0),
+            nn.ReLU(),
+            nn.MaxPool2d(2, stride=2),
+            nn.Dropout(0.2)
+        )
+
+        # outdim = (46 - 3 + 0)/1 + 1 = 44
+        # after maxpooling: 44/2 = 22
+
+
+        self.layer3 = nn.Sequential(
+            nn.Conv2d(hparams["cv2"], hparams["cv3"], 2, stride=1, padding=0),
+            nn.ReLU(),
+            nn.MaxPool2d(2, stride=2),
+            nn.Dropout(0.2)
+        )
+
+        # outdim = (22 - 2 + 0)/1 + 1 = 21
+        # after maxpooling: 21/2 = 10
+
+        self.layer4 = nn.Sequential(
+            nn.Conv2d(hparams["cv3"], 384, 1, stride=1, padding=0),
+            nn.ReLU(),
+            nn.MaxPool2d(2, stride=2),
+            nn.Dropout(0.2)
+        )
+
+        # outdim = (10 - 1 + 0)/1 + 1 = 10
+        # after maxpooling: 10/2 = 5
+        # after dropout: 5*5*384 = 9600
+
+
+        self.fc1 = nn.Sequential(
+            nn.Linear(9600, 475),
+            nn.ReLU(),
+            nn.Dropout(0.2)
+        )
+
+        self.fc2 = nn.Sequential(
+            nn.Linear(475, 256),
+            nn.ReLU(),
+            nn.Dropout(0.3)
+        )
+
+        self.fc3 = nn.Linear(256, 30)
+
 
     def forward(self, x):
         
@@ -57,8 +113,14 @@ class KeypointModel(nn.Module):
         # NOTE: what is the required output size?                              #
         ########################################################################
 
-
-        pass
+        x = self.layer1(x)
+        x = self.layer2(x)
+        x = self.layer3(x)
+        x = self.layer4(x)
+        x = x.view(x.size(0), -1)
+        x = self.fc1(x)
+        x = self.fc2(x)
+        x = self.fc3(x)
 
         ########################################################################
         #                           END OF YOUR CODE                           #
