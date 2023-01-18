@@ -38,67 +38,57 @@ class KeypointModel(nn.Module):
         # allow you to be quick and flexible.                                  #
         ########################################################################
     
-        # input layer
-        self.layer1 = nn.Sequential(
-            # add one same layer with padding (output size = input size)
-            nn.Conv2d(1, hparams["cv1"], 4, stride=1, padding=1),
+        self.pre_process_layer = ConvLayer(hparams["in_channels"], 32, 3, 1, 1)
+        self.res_net = nn.Sequential(
+            ResBlock(32, 32, 3, 1, 1),
+            nn.MaxPool2d(2, 1), # 95 x 95
+            ResBlock(32, 32, 3, 1, 1),
+            nn.MaxPool2d(2, 1), # 94 x 94
+            ResBlock(32, 32, 3, 1, 1),
+            nn.MaxPool2d(2, 1), # 93 x 93
+            ConvLayer(32, 64, 3, 1, 1),
+            nn.MaxPool2d(2, 1), # 92 x 92
+            ResBlock(64, 64, 3, 1, 1),
+            nn.MaxPool2d(2, 2), # 46 x 46
+            ResBlock(64, 64, 3, 1, 1),
+            nn.MaxPool2d(2, 1), # 45 x 45
+            ResBlock(64, 64, 3, 1, 1),
+            nn.MaxPool2d(2, 1), # 44 x 44
+            ResBlock(64, 64, 3, 1, 1),
+            nn.MaxPool2d(2, 1), # 43 x 43
+            ResBlock(64, 64, 3, 1, 1),
+            nn.MaxPool2d(2, 1), # 42 x 42
+            ResBlock(64, 64, 3, 1, 1),
+            nn.MaxPool2d(2, 2), # 21 x 21 
+            ResBlock(64, 64, 3, 1, 1),
+            nn.MaxPool2d(2, 1), # 20 x 20
+            ResBlock(64, 64, 3, 1, 1),
+            nn.MaxPool2d(2, 1), # 19 x 19
+            ResBlock(64, 64, 3, 1, 1),
+            nn.MaxPool2d(2, 1), # 18 x 18
+            ConvLayer(64, 128, 3, 1, 1),
+            nn.MaxPool2d(2, 1), # 17 x 17
+            ResBlock(128, 128, 3, 1, 1),
+            nn.MaxPool2d(2, 1), # 16 x 16
+            ResBlock(128, 128, 3, 1, 1),
+            nn.MaxPool2d(2, 2), # 8 x 8
+            ResBlock(128, 128, 3, 1, 1),
+            nn.MaxPool2d(2, 1), # 7 x 7
+            ResBlock(128, 128, 3, 1, 1),
+            nn.MaxPool2d(2, 1), # 7 x 7
+            ResBlock(128, 128, 3, 1, 1)
+        )
+        self.flatten = nn.Flatten()
+        self.classifier = nn.Sequential(
+            nn.Linear(128*6*6, 512),
             nn.ReLU(),
-            nn.Conv2d(hparams["cv1"], hparams["cv1"], 4, stride=1, padding=0),
+            nn.BatchNorm1d(512),
+            nn.Linear(512, 256),
             nn.ReLU(),
-            nn.MaxPool2d(2, stride=2),
-            nn.Dropout(0.1)
+            nn.BatchNorm1d(256),
+            nn.Linear(256, hparams["out_channels"])
         )
 
-        # outdim = (in_dim - kernel_size + 2*padding)/stride + 1
-        # outdim = (96 - 4 + 0)/1 + 1 = 93
-        # after maxpooling: 93/2 = 46
-
-        self.layer2 = nn.Sequential(
-            nn.Conv2d(hparams["cv1"], hparams["cv2"], 3, stride=1, padding=0),
-            nn.ReLU(),
-            nn.MaxPool2d(2, stride=2),
-            nn.Dropout(0.2)
-        )
-
-        # outdim = (46 - 3 + 0)/1 + 1 = 44
-        # after maxpooling: 44/2 = 22
-
-
-        self.layer3 = nn.Sequential(
-            nn.Conv2d(hparams["cv2"], hparams["cv3"], 2, stride=1, padding=0),
-            nn.ReLU(),
-            nn.MaxPool2d(2, stride=2),
-            nn.Dropout(0.2)
-        )
-
-        # outdim = (22 - 2 + 0)/1 + 1 = 21
-        # after maxpooling: 21/2 = 10
-
-        self.layer4 = nn.Sequential(
-            nn.Conv2d(hparams["cv3"], 384, 1, stride=1, padding=0),
-            nn.ReLU(),
-            nn.MaxPool2d(2, stride=2),
-            nn.Dropout(0.2)
-        )
-
-        # outdim = (10 - 1 + 0)/1 + 1 = 10
-        # after maxpooling: 10/2 = 5
-        # after dropout: 5*5*384 = 9600
-
-
-        self.fc1 = nn.Sequential(
-            nn.Linear(9600, 475),
-            nn.ReLU(),
-            nn.Dropout(0.2)
-        )
-
-        self.fc2 = nn.Sequential(
-            nn.Linear(475, 256),
-            nn.ReLU(),
-            nn.Dropout(0.3)
-        )
-
-        self.fc3 = nn.Linear(256, 30)
 
 
     def forward(self, x):
@@ -113,14 +103,10 @@ class KeypointModel(nn.Module):
         # NOTE: what is the required output size?                              #
         ########################################################################
 
-        x = self.layer1(x)
-        x = self.layer2(x)
-        x = self.layer3(x)
-        x = self.layer4(x)
-        x = x.view(x.size(0), -1)
-        x = self.fc1(x)
-        x = self.fc2(x)
-        x = self.fc3(x)
+        x = self.pre_process_layer(x)
+        x = self.res_net(x)
+        x = self.flatten(x)
+        x = self.classifier(x)
 
         ########################################################################
         #                           END OF YOUR CODE                           #
@@ -152,3 +138,29 @@ class DummyKeypointModel(pl.LightningModule):
 
     def forward(self, x):
         return self.prediction.repeat(x.size()[0], 1, 1, 1)
+
+
+class ConvLayer(nn.Module):
+    def __init__(self, in_channels, out_channels, kernel_size, stride, padding):
+        super(ConvLayer, self).__init__()
+        self.conv = nn.Conv2d(in_channels, out_channels, kernel_size, stride, padding)
+        self.batch_norm = nn.BatchNorm2d(out_channels)
+        self.relu = nn.ReLU()
+
+    def forward(self, x):
+        x = self.conv(x)
+        x = self.relu(x)
+        x = self.batch_norm(x)
+        return x
+
+class ResBlock(nn.Module):
+    def __init__(self, in_channels, out_channels, kernel_size, stride, padding):
+        super(ResBlock, self).__init__()
+        self.conv1 = ConvLayer(in_channels, out_channels, kernel_size, stride, padding)
+        self.conv2 = ConvLayer(out_channels, out_channels, kernel_size, stride, padding)
+
+    def forward(self, x):
+        out = self.conv1(x)
+        out = self.conv2(out)
+        x = x + out
+        return x
