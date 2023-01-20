@@ -75,15 +75,17 @@ class KeypointModel(nn.Module):
             ResBlock(128, 128, 3, 1, 1),
             nn.MaxPool2d(2, 1), # 7 x 7
             ResBlock(128, 128, 3, 1, 1),
-            nn.MaxPool2d(2, 1), # 7 x 7
+            nn.MaxPool2d(2, 1), # 6 x 6
+            ResBlock(128, 128, 3, 1, 1),
+            nn.MaxPool2d(2, 1), # 5 x 5
             ResBlock(128, 128, 3, 1, 1)
         )
         self.flatten = nn.Flatten()
         self.classifier = nn.Sequential(
-            nn.Linear(128*6*6, 512),
+            nn.Linear(128*5*5, 512+128),
             nn.ReLU(),
-            nn.BatchNorm1d(512),
-            nn.Linear(512, 256),
+            nn.BatchNorm1d(512+128),
+            nn.Linear(512+128, 256),
             nn.ReLU(),
             nn.BatchNorm1d(256),
             nn.Linear(256, hparams["out_channels"])
