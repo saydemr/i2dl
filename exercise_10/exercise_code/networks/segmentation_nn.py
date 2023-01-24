@@ -3,16 +3,53 @@ import torch
 import torch.nn as nn
 import pytorch_lightning as pl
 
-class SegmentationNN(pl.LightningModule):
+
+class ConvLayer(nn.Module):
+    def __init__(self, in_channels, out_channels, kernel_size, stride, padding):
+        super(ConvLayer, self).__init__()
+        self.conv = nn.Conv2d(in_channels, out_channels, kernel_size, stride, padding)
+        self.batch_norm = nn.BatchNorm2d(out_channels)
+        self.relu = nn.ReLU()
+        self.elu = nn.ELU()
+
+    def forward(self, x):
+        x = self.conv(x)
+        x = self.elu(x)
+        x = self.batch_norm(x)
+        return x
+
+
+class SegmentationNN(nn.Module):
 
     def __init__(self, num_classes=23, hparams=None):
         super().__init__()
-        self.save_hyperparameters(hparams)
         #######################################################################
         #                             YOUR CODE                               #
         #######################################################################
 
-        pass
+        from torchvision.models import alexnet
+
+        self.encoder = alexnet(pretrained = True).features
+        self.encoder.requires_grad_(False)
+        self.num_classes = num_classes
+        self.hparams = hparams
+        self.batch_size = hparams['batch_size']
+
+
+        # input size: 240 x 240
+        # output size: 240 x 240
+        self.upsample = nn.Sequential(
+            nn.Upsample(scale_factor=2, mode='bicubic'), # 12 x 12 
+            ConvLayer(256, 128, 3, 1, 1), # 12 x 12
+            nn.Upsample(scale_factor=2, mode='bicubic'), # 24 x 24
+            ConvLayer(128, 64, 5, 1, 0), # 20 x 20 
+            nn.Upsample(scale_factor=2, mode='bicubic'), # 40 x 40
+            ConvLayer(64, 32, 3, 1, 1), # 40 x 40 
+            nn.Upsample(scale_factor=2, mode='bicubic'), # 64 x 64
+            ConvLayer(32, 16, 3, 1, 1), # 60 x 60
+            nn.Upsample(scale_factor=3, mode='bicubic'), # 120 x 120
+            nn.Conv2d(16, self.num_classes, 1, 1, 0) # 240 x 240
+        )
 
         #######################################################################
         #                           END OF YOUR CODE                          #
@@ -30,7 +67,12 @@ class SegmentationNN(pl.LightningModule):
         #                             YOUR CODE                               #
         #######################################################################
 
-        pass
+        # batch size adjustment
+        
+        x = self.encoder(x)
+        x = self.upsample(x)
+
+
 
         #######################################################################
         #                           END OF YOUR CODE                          #
