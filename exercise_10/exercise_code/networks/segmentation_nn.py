@@ -9,7 +9,6 @@ class ConvLayer(nn.Module):
         super(ConvLayer, self).__init__()
         self.conv = nn.Conv2d(in_channels, out_channels, kernel_size, stride, padding)
         self.batch_norm = nn.BatchNorm2d(out_channels)
-        self.relu = nn.ReLU()
         self.elu = nn.ELU()
 
     def forward(self, x):
@@ -18,6 +17,32 @@ class ConvLayer(nn.Module):
         x = self.batch_norm(x)
         return x
 
+class ResBlock(nn.Module):
+    def __init__(self, in_channels, out_channels, kernel_size, stride, padding):
+        super(ResBlock, self).__init__()
+        self.conv1 = ConvLayer(in_channels, out_channels, kernel_size, stride, padding)
+        self.conv2 = ConvLayer(out_channels, out_channels, kernel_size, stride, padding)
+
+    def forward(self, x):
+        out = self.conv1(x)
+        out = self.conv2(out)
+        x = x + out
+        return x
+
+
+class DifferentSizeResBlock(nn.Module):
+    def __init__(self, in_channels, out_channels, kernel_size, stride, padding):
+        super(DifferentSizeResBlock, self).__init__()
+        self.conv1 = ConvLayer(in_channels, out_channels, kernel_size, stride, padding)
+        self.conv2 = ConvLayer(out_channels, out_channels, kernel_size, stride, padding)
+        self.conv3 = ConvLayer(in_channels, out_channels, kernel_size, stride, padding)
+
+    def forward(self, x):
+        out = self.conv1(x)
+        out = self.conv2(out)
+        x = self.conv3(x)
+        x = x + out
+        return x
 
 class SegmentationNN(nn.Module):
 
@@ -27,7 +52,9 @@ class SegmentationNN(nn.Module):
         #                             YOUR CODE                               #
         #######################################################################
 
-        from torchvision.models import alexnet
+        from torchvision.models import alexnet, mobilenet_v3_large, densenet201
+
+
 
         self.encoder = alexnet(pretrained = True).features
         self.encoder.requires_grad_(False)
