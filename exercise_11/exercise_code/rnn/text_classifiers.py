@@ -5,7 +5,7 @@ from .rnn_nn import Embedding, RNN, LSTM
 
 
 class RNNClassifier(nn.Module):
-    def __init__(self, num_embeddings, embedding_dim, hidden_size, use_lstm=True, **additional_kwargs):
+    def __init__(self, num_embeddings, embedding_dim, hidden_size, use_lstm=False, **additional_kwargs):
         """
         Inputs:
             num_embeddings: size of the vocabulary
@@ -35,8 +35,16 @@ class RNNClassifier(nn.Module):
         # and an output layer                                                  #
         ########################################################################
         
+        # Initialize an RNN network for sentiment classification 
+        self.embedding = Embedding(num_embeddings, embedding_dim, 0)
+        if use_lstm:
+            self.rnn = nn.LSTM(input_size=embedding_dim, hidden_size=hidden_size)
+        else:
+            self.rnn = RNN(embedding_dim, hidden_size)
+        self.last_fc = nn.Linear(hidden_size, 1)
+        self.sigmoid = nn.Sigmoid()
 
-        pass
+
 
         ########################################################################
         #                           END OF YOUR CODE                           #
@@ -61,7 +69,23 @@ class RNNClassifier(nn.Module):
         # pack_padded_sequence should be applied to the embedding outputs      #
         ########################################################################
 
-        pass
+        # Apply the forward pass of network
+        embed_sequence = self.embedding(sequence)
+        if lengths is not None:
+            embed_sequence = pack_padded_sequence(embed_sequence, lengths)
+
+        rnn_output = self.rnn(embed_sequence)
+
+        useful_output = rnn_output[1][0]
+
+        output = self.last_fc(useful_output)
+        output = self.sigmoid(output)
+        output = output.squeeze()
+
+
+
+
+
 
         ########################################################################
         #                           END OF YOUR CODE                           #

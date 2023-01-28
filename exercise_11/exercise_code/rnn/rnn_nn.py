@@ -100,8 +100,20 @@ class LSTM(nn.Module):
         # Initialise h and c as 0 if these values are not given.                #
         ########################################################################
 
-
-        pass
+        # Build a one layer LSTM with an activation with the attributes
+        # defined above and a forward function below. Use the nn.Linear()      
+        # function as your linear layers.                                      
+        # Initialise h and c as 0 if these values are not given.
+        self.W_hh = nn.Linear(self.hidden_size, self.hidden_size, bias=True)
+        self.W_xh = nn.Linear(self.input_size, self.hidden_size, bias=True)
+        self.W_hi = nn.Linear(self.hidden_size, self.hidden_size, bias=True)
+        self.W_xi = nn.Linear(self.input_size, self.hidden_size, bias=True)
+        self.W_hf = nn.Linear(self.hidden_size, self.hidden_size, bias=True)
+        self.W_xf = nn.Linear(self.input_size, self.hidden_size, bias=True)
+        self.W_ho = nn.Linear(self.hidden_size, self.hidden_size, bias=True)
+        self.W_xo = nn.Linear(self.input_size, self.hidden_size, bias=True)
+        self.activation = nn.Tanh()
+        self.sigmoid = nn.Sigmoid()
 
         ########################################################################
         #                           END OF YOUR CODE                           #
@@ -140,8 +152,17 @@ class LSTM(nn.Module):
         #  TODO: Perform the forward pass                                      #
         ########################################################################
 
+        # forward pass
+        for xt in x.unbind(0):
+            i = self.sigmoid(self.W_hi(h) + self.W_xi(xt))
+            f = self.sigmoid(self.W_hf(h) + self.W_xf(xt))
+            o = self.sigmoid(self.W_ho(h) + self.W_xo(xt))
+            g = self.activation(self.W_hh(h) + self.W_xh(xt))
+            c = f * c + i * g
+            h = o * self.activation(c)
+            h_seq.append(h)
+            c_seq.append(c)
 
-        pass
 
         ########################################################################
         #                           END OF YOUR CODE                           #
@@ -183,7 +204,8 @@ class Embedding(nn.Module):
         ########################################################################
 
 
-        pass
+        self.weight = torch.empty((num_embeddings, embedding_dim)).normal_(0, 1)
+        self.weight = nn.Parameter(self.weight)
 
         ########################################################################
         #                           END OF YOUR CODE                           #
@@ -212,7 +234,9 @@ class Embedding(nn.Module):
         ########################################################################
 
 
-        pass
+        embeddings = weight[inputs] 
+
+
 
         ########################################################################
         #                           END OF YOUR CODE                           #
