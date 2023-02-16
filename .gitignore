@@ -1,5 +1,4 @@
 /datasets
 *.pyc
-*.ipynb
 events.*
 epoch*

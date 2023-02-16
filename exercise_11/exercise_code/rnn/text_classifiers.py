@@ -42,7 +42,7 @@ class RNNClassifier(nn.Module):
         else:
             self.rnn = RNN(embedding_dim, hidden_size)
         self.last_fc = nn.Linear(hidden_size, 1)
-        self.sigmoid = nn.Sigmoid()
+        self.activation = nn.Sigmoid()
 
 
 
@@ -79,7 +79,7 @@ class RNNClassifier(nn.Module):
         useful_output = rnn_output[1][0]
 
         output = self.last_fc(useful_output)
-        output = self.sigmoid(output)
+        output = self.activation(output)
         output = output.squeeze()
 
 
