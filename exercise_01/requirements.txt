@@ -67,7 +67,7 @@ stack-data==0.2.0
 terminado==0.16.0
 testpath==0.6.0
 tinycss2==1.1.1
-tornado==6.3.2
+tornado==6.3.3
 tqdm==4.63.1
 traitlets==5.4.0
 wcwidth==0.2.5
